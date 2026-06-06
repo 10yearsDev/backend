@@ -5,6 +5,7 @@ import com.example.backend.dto.RegisterRequest;
 import com.example.backend.entity.User;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
+
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public String register(RegisterRequest request) {
 
@@ -26,7 +29,8 @@ public class AuthService {
 
         User user = User.builder()
                 .username(request.getUsername())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role("USER")
                 .build();
 
         userRepository.save(user);
@@ -44,9 +48,7 @@ public class AuthService {
             return "User not found";
         }
 
-        if (!user.getPassword()
-                .equals(request.getPassword())) {
-
+        if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             return "Wrong password";
         }
 
